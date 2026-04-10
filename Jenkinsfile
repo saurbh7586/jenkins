@@ -1,23 +1,46 @@
 pipeline {
-    agent { label 'docker-agent1' }
+    agent none
 
     stages {
-        stage('Clone code') {
+
+        stage('Clone Code') {
+            agent any
             steps {
                 git 'https://github.com/saurbh7586/jenkins.git'
             }
         }
 
-        stage('Build docker image') {
-            steps {
-                sh 'docker build -t mysite .'
-            }
-        }
+        stage('Deploy on Both Agents') {
+            parallel {
 
-        stage('Run container') {
-            steps {
-                sh 'docker rm -f cont1 || true'
-                sh 'docker run -d -p 8081:80 --name cont1 mysite'
+                stage('Agent1 Deploy') {
+                    agent { label 'docker-agent1' }
+                    steps {
+                        sh '''
+                        echo "Deploying on Agent1"
+                        hostname
+
+                        docker rm -f mysite || true
+                        docker build -t mysite .
+                        docker run -d -p 8081:80 --name mysite mysite
+                        '''
+                    }
+                }
+
+                stage('Agent2 Deploy') {
+                    agent { label 'docker-agent2' }
+                    steps {
+                        sh '''
+                        echo "Deploying on Agent2"
+                        hostname
+
+                        docker rm -f mysite || true
+                        docker build -t mysite .
+                        docker run -d -p 8082:80 --name mysite mysite
+                        '''
+                    }
+                }
+
             }
         }
     }
