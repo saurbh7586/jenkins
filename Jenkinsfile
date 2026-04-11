@@ -9,33 +9,23 @@ pipeline {
             }
         }
 
-        stage('Deploy on Both Agents') {
-            parallel {
-                stage('Agent1 Deploy') {
-                    agent { label 'docker-agent1' }
-                    steps {
-                        sh '''
-                        echo "Deploying on Agent1"
-                        # कंटेनरचे नाव 'mysite1' करा
-                        docker stop mysite1 || true && docker rm mysite1 || true
-                        docker build -t mysite-img .
-                        docker run -d -p 8081:80 --name mysite1 mysite-img
-                        '''
-                    }
-                }
+        stage('Deploy 5 Containers on Single Node') {
+            agent { label 'docker-agent1' }
+            steps {
+                sh '''
+                docker stop app1 app2 app3 app4 app5 mysite1 mysite2 mysite || true
+                docker rm app1 app2 app3 app4 app5 mysite1 mysite2 mysite || true
 
-                stage('Agent2 Deploy') {
-                    agent { label 'docker-agent2' }
-                    steps {
-                        sh '''
-                        echo "Deploying on Agent2"
-                        # कंटेनरचे नाव 'mysite2' करा
-                        docker stop mysite2 || true && docker rm mysite2 || true
-                        docker build -t mysite-img .
-                        docker run -d -p 8082:80 --name mysite2 mysite-img
-                        '''
-                    }
-                }
+                docker build -t multi-app-img .
+
+                docker run -d -p 8081:80 --name app1 multi-app-img
+                docker run -d -p 8082:80 --name app2 multi-app-img
+                docker run -d -p 8083:80 --name app3 multi-app-img
+                docker run -d -p 8084:80 --name app4 multi-app-img
+                docker run -d -p 8085:80 --name app5 multi-app-img
+
+                docker ps
+                '''
             }
         }
     }
