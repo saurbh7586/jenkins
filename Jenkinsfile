@@ -2,7 +2,6 @@ pipeline {
     agent none
 
     stages {
-
         stage('Clone Code') {
             agent any
             steps {
@@ -12,17 +11,15 @@ pipeline {
 
         stage('Deploy on Both Agents') {
             parallel {
-
                 stage('Agent1 Deploy') {
                     agent { label 'docker-agent1' }
                     steps {
                         sh '''
                         echo "Deploying on Agent1"
-                        hostname
-
-                        docker rm -f mysite || true
-                        docker build -t mysite .
-                        docker run -d -p 8081:80 --name mysite mysite
+                        # कंटेनरचे नाव 'mysite1' करा
+                        docker stop mysite1 || true && docker rm mysite1 || true
+                        docker build -t mysite-img .
+                        docker run -d -p 8081:80 --name mysite1 mysite-img
                         '''
                     }
                 }
@@ -32,15 +29,13 @@ pipeline {
                     steps {
                         sh '''
                         echo "Deploying on Agent2"
-                        hostname
-
-                        docker rm -f mysite || true
-                        docker build -t mysite .
-                        docker run -d -p 8082:80 --name mysite mysite
+                        # कंटेनरचे नाव 'mysite2' करा
+                        docker stop mysite2 || true && docker rm mysite2 || true
+                        docker build -t mysite-img .
+                        docker run -d -p 8082:80 --name mysite2 mysite-img
                         '''
                     }
                 }
-
             }
         }
     }
