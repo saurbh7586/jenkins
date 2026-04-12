@@ -13,28 +13,26 @@ pipeline {
             agent { label 'docker-agent1' }
             steps {
                 sh '''
-                # Junya containers na stop aani remove kara
+                # 1. Junya containers na stop aani remove kara
                 docker stop app-nginx app-apache app-redis app-mysql app-alpine || true
                 docker rm app-nginx app-apache app-redis app-mysql app-alpine || true
 
-                # 1. Nginx Web Server (Static Content)
+                # 2. Nginx Web Server (Port 8081)
                 docker run -d -p 8081:80 --name app-nginx nginx:latest
 
-                # 2. Apache HTTPD (Alternative Web Server)
+                # 3. Apache HTTPD Server (Port 8082)
                 docker run -d -p 8082:80 --name app-apache httpd:latest
 
-                # 3. Redis (In-Memory Database / Cache)
+                # 4. Redis In-Memory Database (Port 6379)
                 docker run -d -p 6379:6379 --name app-redis redis:latest
 
-                # 4. MySQL Database (Backend Database)
-                # Password 'root' dila aahe
+                # 5. MySQL Database (Port 3306)
                 docker run -d -p 3306:3306 --name app-mysql -e MYSQL_ROOT_PASSWORD=root mysql:latest
 
-                # 5. Alpine (Lightweight Linux Container)
-                # Ha container run houn ek message print karel
+                # 6. Alpine Linux (Lightweight OS)
                 docker run -d --name app-alpine alpine tail -f /dev/null
 
-                echo "--- All 5 Different Apps Deployed ---"
+                # Final Status
                 docker ps
                 '''
             }
