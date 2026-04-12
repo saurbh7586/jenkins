@@ -9,37 +9,32 @@ pipeline {
             }
         }
 
-        stage('Deploy 5 Different Containers') {
+        stage('Deploy 5 Real Different Apps') {
             agent { label 'docker-agent1' }
             steps {
                 sh '''
                 # Junya containers na stop aani remove kara
-                docker stop app1 app2 app3 app4 app5 || true
-                docker rm app1 app2 app3 app4 app5 || true
+                docker stop app-nginx app-apache app-redis app-mysql app-alpine || true
+                docker rm app-nginx app-apache app-redis app-mysql app-alpine || true
 
-                # Tumchi image build kara
-                docker build -t multi-app-img .
+                # 1. Nginx Web Server (Static Content)
+                docker run -d -p 8081:80 --name app-nginx nginx:latest
 
-                # --- Container 1 ---
-                docker run -d -p 8081:80 --name app1 multi-app-img
-                docker exec app1 sh -c "echo '<h1>Hell New Container 1 🚀</h1><p>This is my first deployed website.</p>' > /usr/share/nginx/html/index.html"
+                # 2. Apache HTTPD (Alternative Web Server)
+                docker run -d -p 8082:80 --name app-apache httpd:latest
 
-                # --- Container 2 ---
-                docker run -d -p 8082:80 --name app2 multi-app-img
-                docker exec app2 sh -c "echo '<h1>Hell New Container 2 🛠️</h1><p>This is my second deployed website.</p>' > /usr/share/nginx/html/index.html"
+                # 3. Redis (In-Memory Database / Cache)
+                docker run -d -p 6379:6379 --name app-redis redis:latest
 
-                # --- Container 3 ---
-                docker run -d -p 8083:80 --name app3 multi-app-img
-                docker exec app3 sh -c "echo '<h1>Hell New Container 3 🌐</h1><p>This is my third deployed website.</p>' > /usr/share/nginx/html/index.html"
+                # 4. MySQL Database (Backend Database)
+                # Password 'root' dila aahe
+                docker run -d -p 3306:3306 --name app-mysql -e MYSQL_ROOT_PASSWORD=root mysql:latest
 
-                # --- Container 4 ---
-                docker run -d -p 8084:80 --name app4 multi-app-img
-                docker exec app4 sh -c "echo '<h1>Hell New Container 4 ⚡</h1><p>This is my fourth deployed website.</p>' > /usr/share/nginx/html/index.html"
+                # 5. Alpine (Lightweight Linux Container)
+                # Ha container run houn ek message print karel
+                docker run -d --name app-alpine alpine tail -f /dev/null
 
-                # --- Container 5 ---
-                docker run -d -p 8085:80 --name app5 multi-app-img
-                docker exec app5 sh -c "echo '<h1>Hell New Container 5 ✅</h1><p>This is my fifth deployed website.</p>' > /usr/share/nginx/html/index.html"
-
+                echo "--- All 5 Different Apps Deployed ---"
                 docker ps
                 '''
             }
